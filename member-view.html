@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー - 業務管理システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member-view.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1>📅 <span id="memberName">福島</span> さんのカレンダー</h1>
+            <div class="header-buttons">
+                <button class="btn btn-secondary" id="backToTaskBtn">タスク管理に戻る</button>
+                <button class="btn btn-primary" id="prevMonth">← 前月</button>
+                <button class="btn btn-primary" id="nextMonth">次月 →</button>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- 課員選択 -->
+            <div class="member-selector">
+                <label for="selectMember">課員を選択:</label>
+                <select id="selectMember" class="member-select">
+                    <option value="福島">福島</option>
+                    <option value="大村">大村</option>
+                    <option value="北里">北里</option>
+                    <option value="牛嶋">牛嶋</option>
+                    <option value="松本">松本</option>
+                    <option value="安田">安田</option>
+                    <option value="河原">河原</option>
+                    <option value="時里">時里</option>
+                    <option value="パート社員">パート社員</option>
+                </select>
+            </div>
+
+            <!-- カレンダー表示エリア -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h2 id="currentMonth">2025年10月</h2>
+                </div>
+
+                <!-- カレンダー本体 -->
+                <div class="calendar-container">
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th class="day-header sunday">日</th>
+                                <th class="day-header">月</th>
+                                <th class="day-header">火</th>
+                                <th class="day-header">水</th>
+                                <th class="day-header">木</th>
+                                <th class="day-header">金</th>
+                                <th class="day-header saturday">土</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendarBody">
+                            <!-- JavaScriptで動的に生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 割り当てられたタスク一覧 -->
+            <div class="assigned-tasks-section">
+                <h2>割り当てられたタスク</h2>
+                <div class="info-text">
+                    タスクをドラッグしてカレンダーに配置してください
+                </div>
+                <div id="assignedTaskList" class="task-list">
+                    <!-- サンプルタスク -->
+                    <div class="task-item" data-task-id="1" data-days="5" draggable="true">
+                        <div class="task-item-header">
+                            <span class="task-item-title">R325</span>
+                            <span class="task-item-days">5日間</span>
+                        </div>
+                        <div class="task-item-content">線形検討</div>
+                        <div class="task-item-deadline">期限: 2025/10/20</div>
+                    </div>
+
+                    <div class="task-item" data-task-id="2" data-days="3" draggable="true">
+                        <div class="task-item-header">
+                            <span class="task-item-title">舗装維持</span>
+                            <span class="task-item-days">3日間</span>
+                        </div>
+                        <div class="task-item-content">業務計画書作成</div>
+                        <div class="task-item-deadline">期限: 2025/10/18</div>
+                    </div>
+
+                    <div class="task-item task-urgent" data-task-id="3" data-days="2" draggable="true">
+                        <div class="task-item-header">
+                            <span class="task-item-title">大津植木</span>
+                            <span class="task-item-days">2日間</span>
+                        </div>
+                        <div class="task-item-content">設計書作成</div>
+                        <div class="task-item-deadline">期限: 2025/10/15</div>
+                    </div>
+
+                    <div class="task-item" data-task-id="4" data-days="4" draggable="true">
+                        <div class="task-item-header">
+                            <span class="task-item-title">短期対策</span>
+                            <span class="task-item-days">4日間</span>
+                        </div>
+                        <div class="task-item-content">報告書作成</div>
+                        <div class="task-item-deadline">期限: 2025/10/25</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 使い方の説明 -->
+            <div class="instructions">
+                <h3>📌 使い方</h3>
+                <ul>
+                    <li>左側のタスクをカレンダーにドラッグ&ドロップして開始日を設定</li>
+                    <li>タスクの長さは自動的に想定日数分表示されます</li>
+                    <li>配置済みのタスクもドラッグして移動できます</li>
+                    <li>カレンダー上で誰が何をしているか一目で確認できます</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/member-view.js"></script>
+</body>
+</html>

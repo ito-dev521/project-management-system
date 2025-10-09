@@ -1,0 +1,230 @@
+/* タスク管理画面専用スタイル */
+
+/* 未割り当てタスクエリア */
+.unassigned-section {
+    background-color: #ecf0f1;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.unassigned-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.task-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    min-height: 150px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    border: 2px dashed #bdc3c7;
+}
+
+/* タスクカード */
+.task-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    cursor: move;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.task-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.task-content {
+    font-size: 14px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.task-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.task-deadline {
+    opacity: 0.9;
+}
+
+.task-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.task-badge.urgent {
+    background-color: #e74c3c;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 緊急タスクの背景色 */
+.task-card.task-urgent {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* 課員割り振りエリア */
+.assignment-section {
+    margin-top: 30px;
+}
+
+.assignment-section h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* 課員ボックス */
+.member-box {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.member-box:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.member-box.has-urgent {
+    border: 3px solid #e74c3c;
+}
+
+.member-box.no-tasks {
+    border: 3px solid #f39c12;
+}
+
+.member-header {
+    background-color: #34495e;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.member-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.task-count {
+    background-color: #3498db;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.member-tasks {
+    min-height: 150px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f8f9fa;
+}
+
+.member-tasks.drag-over {
+    background-color: #d4edda;
+    border: 2px dashed #28a745;
+}
+
+/* 課員ボックス内のタスクカードは少し小さめ */
+.member-tasks .task-card {
+    width: 100%;
+    cursor: grab;
+}
+
+.member-tasks .task-card:active {
+    cursor: grabbing;
+}
+
+/* 空の状態 */
+.member-tasks:empty::after {
+    content: 'タスクをドロップしてください';
+    display: block;
+    text-align: center;
+    color: #95a5a6;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+/* モーダル内のテキストエリア */
+textarea {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .members-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .task-pool {
+        flex-direction: column;
+    }
+
+    .task-card {
+        width: 100%;
+    }
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業務管理システム - トップ画面</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1>業務管理システム</h1>
+            <div class="header-buttons">
+                <button class="btn btn-primary" id="addProjectBtn">業務の追加</button>
+                <button class="btn btn-secondary" id="taskManagementBtn">タスク管理</button>
+            </div>
+        </header>
+
+        <!-- 業務一覧テーブル -->
+        <main class="main-content">
+            <h2>業務一覧</h2>
+            <div class="table-container">
+                <table class="project-table">
+                    <thead>
+                        <tr>
+                            <th>業務番号</th>
+                            <th>業務名</th>
+                            <th>工期</th>
+                            <th>契約金額</th>
+                            <th>担当者</th>
+                            <th>ステータス</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectTableBody">
+                        <!-- サンプルデータ -->
+                        <tr>
+                            <td>R6-001</td>
+                            <td>R325線形検討業務</td>
+                            <td>2025/10/01 ~ 2025/12/31</td>
+                            <td>¥5,000,000</td>
+                            <td>福島</td>
+                            <td><span class="status-badge status-progress">進行中</span></td>
+                            <td>
+                                <button class="btn-small btn-edit">編集</button>
+                                <button class="btn-small btn-delete">削除</button>
+                            </td>
+                        </tr>
+                        <tr class="warning-row">
+                            <td>R6-002</td>
+                            <td>舗装維持管理業務</td>
+                            <td>2025/09/15 ~ 2025/10/15</td>
+                            <td>¥3,500,000</td>
+                            <td>大村</td>
+                            <td><span class="status-badge status-warning">期限近い</span></td>
+                            <td>
+                                <button class="btn-small btn-edit">編集</button>
+                                <button class="btn-small btn-delete">削除</button>
+                            </td>
+                        </tr>
+                        <tr class="danger-row">
+                            <td>R6-003</td>
+                            <td>運動公園数量修正業務</td>
+                            <td>2025/09/01 ~ 2025/10/05</td>
+                            <td>¥2,800,000</td>
+                            <td>北里</td>
+                            <td><span class="status-badge status-danger">期限過ぎ</span></td>
+                            <td>
+                                <button class="btn-small btn-edit">編集</button>
+                                <button class="btn-small btn-delete">削除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- 業務追加モーダル -->
+        <div id="addProjectModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>業務追加</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="addProjectForm">
+                    <div class="form-group">
+                        <label for="projectNumber">業務番号</label>
+                        <input type="text" id="projectNumber" name="projectNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectName">業務名</label>
+                        <input type="text" id="projectName" name="projectName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">開始日</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">終了日</label>
+                        <input type="date" id="endDate" name="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contractAmount">契約金額(円)</label>
+                        <input type="number" id="contractAmount" name="contractAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="manager">担当者</label>
+                        <select id="manager" name="manager" required>
+                            <option value="">選択してください</option>
+                            <option value="福島">福島</option>
+                            <option value="大村">大村</option>
+                            <option value="北里">北里</option>
+                            <option value="牛嶋">牛嶋</option>
+                            <option value="松本">松本</option>
+                            <option value="安田">安田</option>
+                            <option value="河原">河原</option>
+                            <option value="時里">時里</option>
+                            <option value="パート社員">パート社員</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">追加</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
