@@ -37,34 +37,7 @@
                 </select>
             </div>
 
-            <!-- カレンダー表示エリア -->
-            <div class="calendar-section">
-                <div class="calendar-header">
-                    <h2 id="currentMonth">2025年10月</h2>
-                </div>
-
-                <!-- カレンダー本体 -->
-                <div class="calendar-container">
-                    <table class="calendar-table">
-                        <thead>
-                            <tr>
-                                <th class="day-header sunday">日</th>
-                                <th class="day-header">月</th>
-                                <th class="day-header">火</th>
-                                <th class="day-header">水</th>
-                                <th class="day-header">木</th>
-                                <th class="day-header">金</th>
-                                <th class="day-header saturday">土</th>
-                            </tr>
-                        </thead>
-                        <tbody id="calendarBody">
-                            <!-- JavaScriptで動的に生成 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 割り当てられたタスク一覧 -->
+            <!-- 割り当てられたタスク一覧（カレンダーの上に移動） -->
             <div class="assigned-tasks-section">
                 <h2>割り当てられたタスク</h2>
                 <div class="info-text">
@@ -107,6 +80,33 @@
                         <div class="task-item-content">報告書作成</div>
                         <div class="task-item-deadline">期限: 2025/10/25</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- カレンダー表示エリア -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h2 id="currentMonth">2025年10月</h2>
+                </div>
+
+                <!-- カレンダー本体 -->
+                <div class="calendar-container">
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th class="day-header sunday">日</th>
+                                <th class="day-header">月</th>
+                                <th class="day-header">火</th>
+                                <th class="day-header">水</th>
+                                <th class="day-header">木</th>
+                                <th class="day-header">金</th>
+                                <th class="day-header saturday">土</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendarBody">
+                            <!-- JavaScriptで動的に生成 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
