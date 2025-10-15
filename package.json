@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite"
+    "dev": "vite",
+    "dev:server": "nodemon server/index.js",
+    "server": "node server/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,13 @@
   },
   "homepage": "https://github.com/ito-dev521/project-management-system#readme",
   "devDependencies": {
+    "nodemon": "^3.1.10",
     "vite": "^7.1.9"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.2"
   }
 }

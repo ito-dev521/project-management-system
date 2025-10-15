@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentMonth = 9; // JavaScriptでは0=1月なので、9=10月
     let draggedTask = null;
     let currentMember = '福島';
+    let isPlacingTask = false; // 連続配置ガード
 
     // ===== 祝日リスト(2025年) =====
     const holidays = {
@@ -183,6 +184,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const dropZones = document.querySelectorAll('[data-drop-zone="true"]');
 
         dropZones.forEach(zone => {
+            // 既にイベントリスナーが設定されている場合はスキップ
+            if (zone.hasAttribute('data-drop-enabled')) {
+                return;
+            }
+            zone.setAttribute('data-drop-enabled', 'true');
+
             // ドラッグオーバー時
             zone.addEventListener('dragover', function(e) {
                 e.preventDefault();
@@ -205,6 +212,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 this.classList.remove('drag-over');
 
+                console.log('========== ドロップイベント発火 ==========');
+                console.log('ドロップ先の日付:', this.getAttribute('data-date'));
+                console.log('draggedTask:', draggedTask);
+
                 // 他の月のセルにはドロップできない
                 if (this.classList.contains('other-month')) {
                     alert('他の月にはタスクを配置できません');
@@ -226,7 +237,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const startDate = this.getAttribute('data-date');
                 if (draggedTask && startDate) {
+                    console.log('配置処理開始 - isPlacingTask:', isPlacingTask);
+                    if (isPlacingTask) {
+                        console.log('多重呼び出し防止: 処理をスキップ');
+                        return;
+                    }
+                    isPlacingTask = true;
+
+                    // タスクを配置する前に、同じタスクの既存バーをすべて削除
+                    console.log('removeExistingTaskBars を呼び出し');
+                    removeExistingTaskBars(draggedTask);
+
+                    console.log('placeTaskOnCalendar を呼び出し');
                     placeTaskOnCalendar(draggedTask, startDate);
+                    // placeTaskOnCalendar 内でも必ず false に戻すが、
+                    // 念のためここでも短時間で解除
+                    setTimeout(() => {
+                        isPlacingTask = false;
+                        console.log('isPlacingTask を false に設定');
+                    }, 0);
                 }
             });
         });
@@ -269,7 +298,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const taskBars = document.querySelectorAll('.task-bar');
 
         taskBars.forEach(bar => {
+            // 既にイベントリスナーが設定されている場合はスキップ
+            if (bar.hasAttribute('data-drag-enabled')) {
+                return;
+            }
+
             bar.setAttribute('draggable', 'true');
+            bar.setAttribute('data-drag-enabled', 'true');
 
             bar.addEventListener('dragstart', function(e) {
                 draggedTask = {
@@ -330,6 +365,44 @@ document.addEventListener('DOMContentLoaded', function() {
         return cells;
     }
 
+    // ===== 既存のタスクバーを削除する関数 =====
+    function removeExistingTaskBars(task) {
+        if (!task) return;
+
+        console.log(`========== 既存タスクバーを削除開始 ==========`);
+        console.log(`タスク情報:`, task);
+        console.log(`  - ID: ${task.id}`);
+        console.log(`  - Title: ${task.title}`);
+        console.log(`  - Content: ${task.content}`);
+
+        // カレンダー全体から同じタスクIDまたはタイトル+内容が一致するバーを削除
+        const allTaskBars = document.querySelectorAll('.task-bar');
+        console.log(`カレンダー上のタスクバー総数: ${allTaskBars.length}個`);
+
+        let removedCount = 0;
+
+        allTaskBars.forEach(bar => {
+            const barId = bar.getAttribute('data-task-id');
+            const barTitle = bar.getAttribute('data-title') || '';
+            const barContent = bar.getAttribute('data-content') || '';
+
+            // IDまたはタイトル+内容で一致判定
+            const matchById = typeof task.id !== 'undefined' && task.id && String(barId) === String(task.id);
+            const matchByContent = barTitle === task.title && barContent === task.content;
+
+            console.log(`バーチェック: ID=${barId}, Title=${barTitle}, Content=${barContent}`);
+            console.log(`  matchById: ${matchById}, matchByContent: ${matchByContent}`);
+
+            if (matchById || matchByContent) {
+                console.log(`  ✓ 削除対象: ${barTitle} (ID: ${barId})`);
+                bar.remove();
+                removedCount++;
+            }
+        });
+
+        console.log(`========== 削除完了: ${removedCount}個のタスクバーを削除 ==========`);
+    }
+
     // ===== 営業日のセルを連続したグループに分割 =====
     function splitBusinessDaysIntoGroups(businessDayCells) {
         if (businessDayCells.length === 0) return [];
@@ -386,9 +459,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const groupStartCell = group[0];
 
             // 既存のタスクバーの数をカウントして配置位置を決定
+            // 削除処理後の実際の残存バー数を数える
             const existingTaskBars = groupStartCell.querySelectorAll('.task-bar');
             const taskPosition = existingTaskBars.length;
-            const topPosition = 30 + (taskPosition * 35); // 35pxずつずらす
+            const topPosition = 30 + (taskPosition * 35);
 
             // タスクバーを作成
             const taskBar = document.createElement('div');
@@ -423,12 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
             task.element.setAttribute('draggable', 'false');
         }
 
-        // カレンダーから移動した場合は元のバーを削除
-        if (task.isFromCalendar && task.element) {
-            task.element.remove();
-        }
-
         console.log(`タスクを配置しました(営業日: ${businessDayCells.length}日間、${groups.length}個のバーに分割)`);
+
+        // 配置処理終了
+        isPlacingTask = false;
     }
 
     // ===== 初期化 =====

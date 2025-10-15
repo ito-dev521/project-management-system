@@ -291,6 +291,17 @@ form {
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
+/* 契約金額フィールドのスピナーボタンを非表示 */
+#contractAmount::-webkit-outer-spin-button,
+#contractAmount::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#contractAmount[type="number"] {
+    -moz-appearance: textfield;
+}
+
 .form-actions {
     display: flex;
     justify-content: flex-end;

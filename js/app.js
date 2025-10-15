@@ -9,6 +9,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelBtn = document.getElementById('cancelBtn');
     const taskManagementBtn = document.getElementById('taskManagementBtn');
 
+    // 契約金額フィールドの3桁区切り処理
+    const contractAmountInput = document.getElementById('contractAmount');
+    if (contractAmountInput) {
+        // inputイベントで3桁区切りを追加
+        contractAmountInput.addEventListener('input', function(e) {
+            // カーソル位置を保存
+            let cursorPosition = e.target.selectionStart;
+            let oldLength = e.target.value.length;
+
+            // 数字以外を削除
+            let value = e.target.value.replace(/[^\d]/g, '');
+
+            // 3桁区切りのカンマを追加
+            if (value) {
+                value = parseInt(value, 10).toLocaleString('ja-JP');
+            }
+
+            // 値を設定
+            e.target.value = value;
+
+            // カーソル位置を調整
+            let newLength = value.length;
+            let lengthDiff = newLength - oldLength;
+            e.target.setSelectionRange(cursorPosition + lengthDiff, cursorPosition + lengthDiff);
+        });
+
+        // フォーカス時に既存の値もフォーマット
+        contractAmountInput.addEventListener('focus', function(e) {
+            let value = e.target.value.replace(/[^\d]/g, '');
+            if (value) {
+                e.target.value = parseInt(value, 10).toLocaleString('ja-JP');
+            }
+        });
+    }
+
     // 「業務の追加」ボタンをクリック → モーダルを表示
     if (addProjectBtn) {
         addProjectBtn.addEventListener('click', function() {
@@ -49,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // フォーム送信処理
+    // フォーム送信処理(API連携)
     const addProjectForm = document.getElementById('addProjectForm');
     if (addProjectForm) {
         addProjectForm.addEventListener('submit', function(event) {
@@ -61,20 +96,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 projectName: document.getElementById('projectName').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
-                contractAmount: document.getElementById('contractAmount').value,
+                contractAmount: document.getElementById('contractAmount').value.replace(/,/g, ''), // カンマを削除
                 manager: document.getElementById('manager').value
             };
 
-            console.log('新しい業務を追加:', formData);
+            console.log('新しい業務を追加(送信):', formData);
 
-            // 後でSupabaseに保存する処理を追加します
-            alert(`業務「${formData.projectName}」を追加しました！\n(まだデータベースには保存されていません)`);
-
-            // フォームをリセット
-            addProjectForm.reset();
-
-            // モーダルを閉じる
-            addProjectModal.style.display = 'none';
+            fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(async (res) => {
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            })
+            .then((data) => {
+                alert(`業務「${formData.projectName}」を追加しました！ (ID: ${data.id})`);
+                addProjectForm.reset();
+                addProjectModal.style.display = 'none';
+            })
+            .catch((err) => {
+                console.error(err);
+                alert('業務の保存に失敗しました。サーバー状態・DB接続を確認してください。');
+            });
         });
     }
 
