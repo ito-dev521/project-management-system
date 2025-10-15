@@ -214,6 +214,38 @@
     opacity: 0.9;
 }
 
+.task-bar-deadline {
+    font-size: 10px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    opacity: 0.95;
+    white-space: nowrap;
+}
+
+/* カレンダーセル上の期限マーカー */
+.deadline-marker {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #ff4444;
+    color: white;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    z-index: 15;
+    max-width: 80%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.deadline-task {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* 複数タスクが重なった場合の縦位置はJavaScriptで動的に設定 */
 
 /* タスク一覧エリア */

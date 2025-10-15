@@ -428,6 +428,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ===== 課員カードクリックでカレンダー画面に遷移 =====
+    function setupMemberCardClick() {
+        const memberBoxes = document.querySelectorAll('.member-box');
+
+        memberBoxes.forEach(box => {
+            // カーソルをポインターに変更するためのスタイル
+            box.style.cursor = 'pointer';
+
+            box.addEventListener('click', function(e) {
+                // タスクカードのボタンクリックなど、子要素のイベントは除外
+                if (e.target.classList.contains('btn-small') ||
+                    e.target.classList.contains('task-card') ||
+                    e.target.closest('.task-card')) {
+                    return;
+                }
+
+                const memberName = this.getAttribute('data-member-id');
+                console.log(`${memberName}のカレンダーを表示します`);
+
+                // カレンダー画面に遷移（課員名をURLパラメータで渡す）
+                window.location.href = `member-view.html?member=${encodeURIComponent(memberName)}`;
+            });
+        });
+    }
+
     // 初期化: 既存のタスクカードにボタンを追加
     addButtonsToExistingCards();
 
@@ -439,6 +464,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 初期化: 課員ボックスの状態を更新
     updateMemberBoxStatus();
+
+    // 初期化: 課員カードクリック機能を有効化
+    setupMemberCardClick();
 
     console.log('ドラッグ&ドロップ機能を有効にしました');
     console.log('タスクをドラッグして課員に割り振ってください！');

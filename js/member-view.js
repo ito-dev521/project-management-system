@@ -6,8 +6,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentYear = 2025;
     let currentMonth = 9; // JavaScriptでは0=1月なので、9=10月
     let draggedTask = null;
-    let currentMember = '福島';
+    let currentMember = '福島'; // デフォルト値
     let isPlacingTask = false; // 連続配置ガード
+
+    // URLパラメータから課員名を取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const memberParam = urlParams.get('member');
+    if (memberParam) {
+        currentMember = memberParam;
+        console.log(`URLパラメータから課員を設定: ${currentMember}`);
+    }
 
     // ===== 祝日リスト(2025年) =====
     const holidays = {
@@ -312,6 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     days: parseInt(this.getAttribute('data-days')),
                     title: this.getAttribute('data-title'),
                     content: this.getAttribute('data-content'),
+                    deadline: this.getAttribute('data-deadline') || '',
                     isUrgent: this.classList.contains('urgent'),
                     isFromCalendar: true,
                     element: this
@@ -365,11 +374,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return cells;
     }
 
-    // ===== 既存のタスクバーを削除する関数 =====
+    // ===== 既存のタスクバーと期限マーカーを削除する関数 =====
     function removeExistingTaskBars(task) {
         if (!task) return;
 
-        console.log(`========== 既存タスクバーを削除開始 ==========`);
+        console.log(`========== 既存タスクバー・期限マーカーを削除開始 ==========`);
         console.log(`タスク情報:`, task);
         console.log(`  - ID: ${task.id}`);
         console.log(`  - Title: ${task.title}`);
@@ -381,17 +390,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let removedCount = 0;
 
-        allTaskBars.forEach(bar => {
+        // 配列に変換してから処理（削除中にNodeListが変化するのを防ぐ）
+        Array.from(allTaskBars).forEach(bar => {
             const barId = bar.getAttribute('data-task-id');
             const barTitle = bar.getAttribute('data-title') || '';
             const barContent = bar.getAttribute('data-content') || '';
 
-            // IDまたはタイトル+内容で一致判定
-            const matchById = typeof task.id !== 'undefined' && task.id && String(barId) === String(task.id);
-            const matchByContent = barTitle === task.title && barContent === task.content;
-
-            console.log(`バーチェック: ID=${barId}, Title=${barTitle}, Content=${barContent}`);
-            console.log(`  matchById: ${matchById}, matchByContent: ${matchByContent}`);
+            // より厳密な一致判定
+            const matchById = task.id && barId && String(barId) === String(task.id);
+            const matchByContent = barTitle && barContent &&
+                                   barTitle === task.title &&
+                                   barContent === task.content;
 
             if (matchById || matchByContent) {
                 console.log(`  ✓ 削除対象: ${barTitle} (ID: ${barId})`);
@@ -400,7 +409,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        console.log(`========== 削除完了: ${removedCount}個のタスクバーを削除 ==========`);
+        console.log(`タスクバー削除完了: ${removedCount}個`);
+
+        // 期限マーカーからもこのタスクを削除
+        const allDeadlineMarkers = document.querySelectorAll('.deadline-marker');
+        let removedDeadlineCount = 0;
+
+        allDeadlineMarkers.forEach(marker => {
+            const deadlineTasks = marker.querySelectorAll('.deadline-task');
+            deadlineTasks.forEach(deadlineTask => {
+                const deadlineTitle = deadlineTask.textContent.trim();
+                if (deadlineTitle === task.title) {
+                    console.log(`  ✓ 期限マーカー削除対象: ${deadlineTitle}`);
+                    deadlineTask.remove();
+                    removedDeadlineCount++;
+                }
+            });
+
+            // マーカー内のタスクがすべて削除されたらマーカー自体も削除
+            if (marker.querySelectorAll('.deadline-task').length === 0) {
+                marker.remove();
+            }
+        });
+
+        console.log(`期限マーカー削除完了: ${removedDeadlineCount}個`);
+        console.log(`========== 削除完了 ==========`);
     }
 
     // ===== 営業日のセルを連続したグループに分割 =====
@@ -439,6 +472,46 @@ document.addEventListener('DOMContentLoaded', function() {
     function placeTaskOnCalendar(task, startDate) {
         console.log(`タスク「${task.title}」を${startDate}から配置します`);
 
+        // 期限チェック: タスクに期限が設定されている場合
+        if (task.deadline) {
+            // 期限日を解析 ("期限: 2025/10/20" または "2025/10/20" の形式)
+            const deadlineMatch = task.deadline.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+            if (deadlineMatch) {
+                const deadlineDate = new Date(`${deadlineMatch[1]}-${deadlineMatch[2]}-${deadlineMatch[3]}`);
+
+                // 開始日からタスク完了予定日を計算（営業日ベース）
+                const startDateObj = new Date(startDate);
+                let currentDate = new Date(startDate);
+                let businessDayCount = 0;
+
+                // タスクの日数分の営業日を進める
+                while (businessDayCount < task.days) {
+                    const dayOfWeek = currentDate.getDay();
+                    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+
+                    if (!isWeekendOrHoliday(dateStr, dayOfWeek)) {
+                        businessDayCount++;
+                    }
+
+                    if (businessDayCount < task.days) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                }
+
+                // タスク完了予定日
+                const taskEndDate = currentDate;
+
+                console.log(`期限チェック: タスク完了予定=${taskEndDate.toLocaleDateString('ja-JP')}, 期限=${deadlineDate.toLocaleDateString('ja-JP')}`);
+
+                // タスク完了予定日が期限を超える場合はエラー
+                if (taskEndDate > deadlineDate) {
+                    isPlacingTask = false;
+                    alert(`エラー: このタスクを${new Date(startDate).toLocaleDateString('ja-JP')}から開始すると、完了予定日(${taskEndDate.toLocaleDateString('ja-JP')})が期限(${deadlineDate.toLocaleDateString('ja-JP')})を超えてしまいます。\n\nより早い日付に配置してください。`);
+                    return;
+                }
+            }
+        }
+
         // 開始日のセルを取得
         const startCell = document.querySelector(`[data-date="${startDate}"]`);
         if (!startCell) return;
@@ -454,15 +527,85 @@ document.addEventListener('DOMContentLoaded', function() {
         // 営業日のセルを連続したグループに分割（土日祝を挟むと分割される）
         const groups = splitBusinessDaysIntoGroups(businessDayCells);
 
+        // すべてのグループのセルで既存タスクバーの最大数を見つける（全体で統一された位置を使用）
+        // 重要: 各セルで、そのセルを「含む」すべてのタスクバーをカウントする必要がある
+
+        // まず、すべての既存タスクバーの日付範囲を計算してキャッシュする
+        const allTaskBars = document.querySelectorAll('.task-bar');
+        const taskBarRanges = [];
+
+        allTaskBars.forEach(bar => {
+            const barParent = bar.parentElement;
+            if (!barParent || !barParent.hasAttribute('data-date')) return;
+
+            const barStartDate = barParent.getAttribute('data-date');
+            const barDays = parseInt(bar.getAttribute('data-days')) || 1;
+            const barTitle = bar.getAttribute('data-title');
+
+            // バーの開始日から営業日数分の日付を計算
+            const barDateSet = new Set();
+            let currentDate = new Date(barStartDate);
+            let count = 0;
+
+            while (count < barDays) {
+                const dayOfWeek = currentDate.getDay();
+                const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+
+                if (!isWeekendOrHoliday(dateStr, dayOfWeek)) {
+                    barDateSet.add(dateStr);
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            taskBarRanges.push({
+                title: barTitle,
+                dates: barDateSet,
+                topPosition: bar.style.top
+            });
+        });
+
+        console.log(`既存タスクバー数: ${taskBarRanges.length}`);
+        taskBarRanges.forEach(range => {
+            const dateArray = Array.from(range.dates);
+            const dateRange = dateArray.length > 3
+                ? `${dateArray[0]}...${dateArray[dateArray.length-1]}`
+                : dateArray.join(', ');
+            console.log(`  - ${range.title}: ${dateRange}, top=${range.topPosition}`);
+        });
+
+        // 各セルで重なっているタスクバーをカウント
+        let maxTaskCount = 0;
+
+        businessDayCells.forEach((cell, index) => {
+            const cellDate = cell.getAttribute('data-date');
+            let overlappingTaskCount = 0;
+
+            // このセルの日付を含むタスクバーの数を数える
+            taskBarRanges.forEach(taskRange => {
+                if (taskRange.dates.has(cellDate)) {
+                    overlappingTaskCount++;
+                }
+            });
+
+            if (overlappingTaskCount > 0) {
+                console.log(`  ${cellDate}: ${overlappingTaskCount}個のタスクが重なっている`);
+            }
+            maxTaskCount = Math.max(maxTaskCount, overlappingTaskCount);
+        });
+
+        // 新しいタスクの縦位置を最大数に基づいて決定
+        const taskPosition = maxTaskCount;
+        const topPosition = 30 + (taskPosition * 35);
+
+        console.log(`========== 位置計算 ==========`);
+        console.log(`全体の最大タスク数=${maxTaskCount}, 新規位置=${taskPosition}, top=${topPosition}px`);
+
         // 各グループごとにタスクバーを作成
         groups.forEach((group, groupIndex) => {
             const groupStartCell = group[0];
 
-            // 既存のタスクバーの数をカウントして配置位置を決定
-            // 削除処理後の実際の残存バー数を数える
-            const existingTaskBars = groupStartCell.querySelectorAll('.task-bar');
-            const taskPosition = existingTaskBars.length;
-            const topPosition = 30 + (taskPosition * 35);
+            console.log(`グループ${groupIndex}: ${group.length}日間`);
 
             // タスクバーを作成
             const taskBar = document.createElement('div');
@@ -471,10 +614,24 @@ document.addEventListener('DOMContentLoaded', function() {
             taskBar.setAttribute('data-days', task.days);
             taskBar.setAttribute('data-title', task.title);
             taskBar.setAttribute('data-content', task.content);
+            taskBar.setAttribute('data-deadline', task.deadline || '');
             taskBar.setAttribute('data-group-index', groupIndex);
+
+            // 期限を表示用にフォーマット（"期限: 2025/10/20" → "10/20"）
+            let deadlineDisplay = '';
+            if (task.deadline) {
+                const deadlineMatch = task.deadline.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+                if (deadlineMatch) {
+                    deadlineDisplay = `${deadlineMatch[2]}/${deadlineMatch[3]}`;
+                } else {
+                    deadlineDisplay = task.deadline.replace('期限: ', '');
+                }
+            }
+
             taskBar.innerHTML = `
                 <span class="task-bar-title">${task.title}</span>
                 <span class="task-bar-content">${task.content}</span>
+                ${deadlineDisplay ? `<span class="task-bar-deadline">期限:${deadlineDisplay}</span>` : ''}
             `;
 
             // グループ内の営業日数に基づいてタスクバーの幅を計算
@@ -484,9 +641,49 @@ document.addEventListener('DOMContentLoaded', function() {
             // タスクバーの縦位置を設定
             taskBar.style.top = `${topPosition}px`;
 
+            console.log(`グループ${groupIndex}のタスクバーを作成: ${task.title}, top=${topPosition}px, 開始セル=${group[0].getAttribute('data-date')}`);
+
             // セルに追加
             groupStartCell.appendChild(taskBar);
         });
+
+        // 期限日をカレンダーに表示
+        if (task.deadline) {
+            const deadlineMatch = task.deadline.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+            if (deadlineMatch) {
+                const deadlineDate = `${deadlineMatch[1]}-${deadlineMatch[2]}-${deadlineMatch[3]}`;
+                const deadlineCell = document.querySelector(`[data-date="${deadlineDate}"]`);
+                if (deadlineCell) {
+                    // 既存の期限マーカーをチェック
+                    let deadlineMarker = deadlineCell.querySelector('.deadline-marker');
+                    if (!deadlineMarker) {
+                        deadlineMarker = document.createElement('div');
+                        deadlineMarker.className = 'deadline-marker';
+                        deadlineCell.appendChild(deadlineMarker);
+                    }
+
+                    // このタスクの期限マーカーが既に存在するかチェック
+                    const existingDeadlineTasks = deadlineMarker.querySelectorAll('.deadline-task');
+                    let alreadyExists = false;
+                    existingDeadlineTasks.forEach(dt => {
+                        if (dt.textContent.trim() === task.title) {
+                            alreadyExists = true;
+                        }
+                    });
+
+                    // 既に存在しない場合のみ追加
+                    if (!alreadyExists) {
+                        const deadlineTask = document.createElement('div');
+                        deadlineTask.className = 'deadline-task';
+                        deadlineTask.textContent = `${task.title}`;
+                        deadlineMarker.appendChild(deadlineTask);
+                        console.log(`期限マーカー追加: ${task.title} (${deadlineDate})`);
+                    } else {
+                        console.log(`期限マーカー既存: ${task.title} (${deadlineDate}) - スキップ`);
+                    }
+                }
+            }
+        }
 
         // カレンダー上のタスクバーにドラッグ機能を追加
         setupTaskBarDrag();
@@ -506,6 +703,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== 初期化 =====
     generateCalendar(currentYear, currentMonth);
     setupTaskDrag();
+
+    // 課員セレクトボックスの初期値を設定
+    if (selectMember && currentMember) {
+        selectMember.value = currentMember;
+        memberNameDisplay.textContent = currentMember;
+        console.log(`課員セレクトボックスを「${currentMember}」に設定しました`);
+    }
 
     console.log('カレンダーを生成しました');
     console.log('タスクをドラッグしてカレンダーに配置してください！');
